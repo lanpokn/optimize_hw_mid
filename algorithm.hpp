@@ -103,7 +103,7 @@ public:
 };
 class GradientDescent:public optimizer{
 public:
-    double rate = 0.005;
+    double rate = 0.09;
     GradientDescent(int loops, double stop):optimizer(loops,stop){
 
     }
