@@ -33,7 +33,7 @@ double StringToDouble(string Input)
 class RidgeRegresion{
 public:
     double lambda = 0.5;//hyper parameter
-    std::vector<double> B = {1,1,1,1,1,1,1,1};//
+    std::vector<double> B = {10,10,10,10,10,10,10,10};//
     int size = 0;
     double Y[10000];
     double X[8][10000]; 
@@ -112,6 +112,7 @@ public:
 
     }
     virtual void optimize(RidgeRegresion* system){
+        cout<<0<<":"<<system->MSE()<<endl;
         for(int i = 0; i<largest_loops;i++){
             //below are the conclusion of the method
             double delta_L[8];
@@ -133,65 +134,153 @@ public:
             for(int j = 0;j<8;j++){
                 system->B[j]-=rate*delta_L[j];
             }
+            cout<<i+1<<":"<<system->MSE()<<endl;
             // rate =  rate;
         }
     }
 };
 class ConjugateDescent:optimizer{
+public:
     ConjugateDescent(int loops, double stop):optimizer(loops,stop){
 
     }
     double rate =0.09;
     virtual void optimize(RidgeRegresion* system){
+        cout<<0<<":"<<system->MSE()<<endl;
         for(int i = 0; i<largest_loops;i++){
-        //below are the conclusion of the method
-        //1
-        double delta_L[8];
-        double delta_L_old[8];
-        double p[8];
-        double x_old[8];
-        for(int j=0;j<8;j++){
-            delta_L[j] = 0;
-            for(int k =0;k<system->size;k++){
-                delta_L_old[j]+=-2*(system->Y[k]-system->B[0]*system->X[0][k]);
-                delta_L_old[j]+=-2*(-system->B[1]*system->X[1][k]);
-                delta_L_old[j]+=-2*(-system->B[2]*system->X[2][k]);
-                delta_L_old[j]+=-2*(-system->B[3]*system->X[3][k]);
-                delta_L_old[j]+=-2*(-system->B[4]*system->X[4][k]);
-                delta_L_old[j]+=-2*(-system->B[5]*system->X[5][k]);
-                delta_L_old[j]+=-2*(-system->B[6]*system->X[6][k]);
-                delta_L_old[j]+=-2*(-system->B[7]*system->X[7][k]);
-                delta_L_old[j]*=system->X[j][k];
+            //below are the conclusion of the method
+            //1
+            double delta_L[8];
+            double delta_L_old[8];
+            double beta;
+            double p[8];
+            double x_old[8];
+            for(int j=0;j<8;j++){
+                delta_L[j] = 0;
+                for(int k =0;k<system->size;k++){
+                    delta_L_old[j]+=-2*(system->Y[k]-system->B[0]*system->X[0][k]);
+                    delta_L_old[j]+=-2*(-system->B[1]*system->X[1][k]);
+                    delta_L_old[j]+=-2*(-system->B[2]*system->X[2][k]);
+                    delta_L_old[j]+=-2*(-system->B[3]*system->X[3][k]);
+                    delta_L_old[j]+=-2*(-system->B[4]*system->X[4][k]);
+                    delta_L_old[j]+=-2*(-system->B[5]*system->X[5][k]);
+                    delta_L_old[j]+=-2*(-system->B[6]*system->X[6][k]);
+                    delta_L_old[j]+=-2*(-system->B[7]*system->X[7][k]);
+                    delta_L_old[j]*=system->X[j][k];
+                }
+                delta_L_old[j]+=2*system->lambda*system->B[j];
+                if(i == 0){
+                    p[j] = delta_L_old[j];
+                }
             }
-            delta_L_old[j]+=2*system->lambda*system->B[j];
-            if(i == 0){
-                p[j] = delta_L_old[j];
+            for(int j=0;j<8;j++){
+                x_old[j] = system->B[j];
+                system->B[j]-=rate*p[j];
             }
-        }
-        for(int j=0;j<8;j++){
-            x_old[j] = system->B[j];
-            system->B[j]-=rate*p[j];
-        }
-        //2
-        for(int j=0;j<8;j++){
-            delta_L[j] = 0;
-            for(int k =0;k<system->size;k++){
-                delta_L[j]+=-2*(system->Y[k]-system->B[0]*system->X[0][k]);
-                delta_L[j]+=-2*(-system->B[1]*system->X[1][k]);
-                delta_L[j]+=-2*(-system->B[2]*system->X[2][k]);
-                delta_L[j]+=-2*(-system->B[3]*system->X[3][k]);
-                delta_L[j]+=-2*(-system->B[4]*system->X[4][k]);
-                delta_L[j]+=-2*(-system->B[5]*system->X[5][k]);
-                delta_L[j]+=-2*(-system->B[6]*system->X[6][k]);
-                delta_L[j]+=-2*(-system->B[7]*system->X[7][k]);
-                delta_L[j]*=system->X[j][k];
+            //2
+            for(int j=0;j<8;j++){
+                delta_L[j] = 0;
+                for(int k =0;k<system->size;k++){
+                    delta_L[j]+=-2*(system->Y[k]-system->B[0]*system->X[0][k]);
+                    delta_L[j]+=-2*(-system->B[1]*system->X[1][k]);
+                    delta_L[j]+=-2*(-system->B[2]*system->X[2][k]);
+                    delta_L[j]+=-2*(-system->B[3]*system->X[3][k]);
+                    delta_L[j]+=-2*(-system->B[4]*system->X[4][k]);
+                    delta_L[j]+=-2*(-system->B[5]*system->X[5][k]);
+                    delta_L[j]+=-2*(-system->B[6]*system->X[6][k]);
+                    delta_L[j]+=-2*(-system->B[7]*system->X[7][k]);
+                    delta_L[j]*=system->X[j][k];
+                }
+                delta_L[j]+=2*system->lambda*system->B[j];
+                //3
+                beta += delta_L[j];
             }
-            delta_L[j]+=2*system->lambda*system->B[j];
+            //3
+            beta =beta*beta;
+            double temp = 0;
+            for(int j = 0;j<8;j++){
+                temp+= delta_L_old[j];
+            }
+            temp = temp*temp;
+            beta = -beta/temp;
+            //4
+            for(int j = 0;j<8;j++){
+                p[j] = delta_L[j] - beta*p[j];
+            }
+            cout<<i+1<<":"<<system->MSE()<<endl;
         }
     }
 };
 class quasiNewton:optimizer{
+public:
     quasiNewton(int loops, double stop):optimizer(loops,stop){
 
+    }
+    double rate = 0.2;
+    virtual void optimize(RidgeRegresion* system){
+        cout<<0<<":"<<system->MSE()<<endl;
+        for(int i = 0; i<largest_loops;i++){
+            //below are the conclusion of the method
+            //1
+            double delta_L[8];
+            double delta_L_old[8];
+            double beta;
+            double p[8];
+            double x_old[8];
+            for(int j=0;j<8;j++){
+                delta_L[j] = 0;
+                for(int k =0;k<system->size;k++){
+                    delta_L_old[j]+=-2*(system->Y[k]-system->B[0]*system->X[0][k]);
+                    delta_L_old[j]+=-2*(-system->B[1]*system->X[1][k]);
+                    delta_L_old[j]+=-2*(-system->B[2]*system->X[2][k]);
+                    delta_L_old[j]+=-2*(-system->B[3]*system->X[3][k]);
+                    delta_L_old[j]+=-2*(-system->B[4]*system->X[4][k]);
+                    delta_L_old[j]+=-2*(-system->B[5]*system->X[5][k]);
+                    delta_L_old[j]+=-2*(-system->B[6]*system->X[6][k]);
+                    delta_L_old[j]+=-2*(-system->B[7]*system->X[7][k]);
+                    delta_L_old[j]*=system->X[j][k];
+                }
+                delta_L_old[j]+=2*system->lambda*system->B[j];
+                if(i == 0){
+                    p[j] = delta_L_old[j];
+                }
+            }
+            for(int j=0;j<8;j++){
+                x_old[j] = system->B[j];
+                system->B[j]-=rate*p[j];
+            }
+            //2
+            for(int j=0;j<8;j++){
+                delta_L[j] = 0;
+                for(int k =0;k<system->size;k++){
+                    delta_L[j]+=-2*(system->Y[k]-system->B[0]*system->X[0][k]);
+                    delta_L[j]+=-2*(-system->B[1]*system->X[1][k]);
+                    delta_L[j]+=-2*(-system->B[2]*system->X[2][k]);
+                    delta_L[j]+=-2*(-system->B[3]*system->X[3][k]);
+                    delta_L[j]+=-2*(-system->B[4]*system->X[4][k]);
+                    delta_L[j]+=-2*(-system->B[5]*system->X[5][k]);
+                    delta_L[j]+=-2*(-system->B[6]*system->X[6][k]);
+                    delta_L[j]+=-2*(-system->B[7]*system->X[7][k]);
+                    delta_L[j]*=system->X[j][k];
+                }
+                delta_L[j]+=2*system->lambda*system->B[j];
+                //3
+                beta += delta_L[j];
+            }
+            //3
+            beta =beta*beta;
+            double temp = 0;
+            for(int j = 0;j<8;j++){
+                temp+= delta_L_old[j];
+            }
+            temp = temp*temp;
+            beta = -beta/temp;
+            //4
+            for(int j = 0;j<8;j++){
+                p[j] = delta_L[j] - beta*p[j];
+            }
+            cout<<i+1<<":"<<system->MSE()<<endl;
+            rate = rate*0.95;
+        }
     }
 };
