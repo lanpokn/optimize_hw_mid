@@ -101,6 +101,10 @@ public:
     }
     virtual void optimize(RidgeRegresion* system) = 0;
 };
+/**
+ * @brief 注意delta_L就是该店的梯度，在各种方法中应该通用，所以就不改了。
+ * 
+ */
 class GradientDescent:public optimizer{
 public:
     double rate = 0.09;
@@ -136,6 +140,54 @@ public:
 class ConjugateDescent:optimizer{
     ConjugateDescent(int loops, double stop):optimizer(loops,stop){
 
+    }
+    double rate =0.09;
+    virtual void optimize(RidgeRegresion* system){
+        for(int i = 0; i<largest_loops;i++){
+        //below are the conclusion of the method
+        //1
+        double delta_L[8];
+        double delta_L_old[8];
+        double p[8];
+        double x_old[8];
+        for(int j=0;j<8;j++){
+            delta_L[j] = 0;
+            for(int k =0;k<system->size;k++){
+                delta_L_old[j]+=-2*(system->Y[k]-system->B[0]*system->X[0][k]);
+                delta_L_old[j]+=-2*(-system->B[1]*system->X[1][k]);
+                delta_L_old[j]+=-2*(-system->B[2]*system->X[2][k]);
+                delta_L_old[j]+=-2*(-system->B[3]*system->X[3][k]);
+                delta_L_old[j]+=-2*(-system->B[4]*system->X[4][k]);
+                delta_L_old[j]+=-2*(-system->B[5]*system->X[5][k]);
+                delta_L_old[j]+=-2*(-system->B[6]*system->X[6][k]);
+                delta_L_old[j]+=-2*(-system->B[7]*system->X[7][k]);
+                delta_L_old[j]*=system->X[j][k];
+            }
+            delta_L_old[j]+=2*system->lambda*system->B[j];
+            if(i == 0){
+                p[j] = delta_L_old[j];
+            }
+        }
+        for(int j=0;j<8;j++){
+            x_old[j] = system->B[j];
+            system->B[j]-=rate*p[j];
+        }
+        //2
+        for(int j=0;j<8;j++){
+            delta_L[j] = 0;
+            for(int k =0;k<system->size;k++){
+                delta_L[j]+=-2*(system->Y[k]-system->B[0]*system->X[0][k]);
+                delta_L[j]+=-2*(-system->B[1]*system->X[1][k]);
+                delta_L[j]+=-2*(-system->B[2]*system->X[2][k]);
+                delta_L[j]+=-2*(-system->B[3]*system->X[3][k]);
+                delta_L[j]+=-2*(-system->B[4]*system->X[4][k]);
+                delta_L[j]+=-2*(-system->B[5]*system->X[5][k]);
+                delta_L[j]+=-2*(-system->B[6]*system->X[6][k]);
+                delta_L[j]+=-2*(-system->B[7]*system->X[7][k]);
+                delta_L[j]*=system->X[j][k];
+            }
+            delta_L[j]+=2*system->lambda*system->B[j];
+        }
     }
 };
 class quasiNewton:optimizer{
